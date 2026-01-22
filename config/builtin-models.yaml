@@ -1,0 +1,83 @@
+# Built-in Model Presets for Jindo
+# These are the recommended model configurations for different hardware tiers
+
+presets:
+  # Lightweight preset - For systems with limited VRAM (2.5GB+)
+  lightweight:
+    name: "Lightweight"
+    description: "Best for systems with limited VRAM (~2.5GB)"
+    conversationModel: "ollama:phi-3-mini"
+    functionModel: "ollama:functiongemma:270m"
+    vram: "2.5GB"
+    disk: "1.7GB"
+    notes:
+      - "Fast response times"
+      - "Lower conversation quality"
+      - "Suitable for laptops"
+
+  # Balanced preset - For most users (3.5GB+)
+  balanced:
+    name: "Balanced"
+    description: "Best balance of performance and resource usage (~3.5GB)"
+    conversationModel: "ollama:llama3.2:3b"
+    functionModel: "ollama:functiongemma:270m"
+    vram: "3.5GB"
+    disk: "1.9GB"
+    notes:
+      - "Good conversation quality"
+      - "Reliable function calling"
+      - "Recommended for most users"
+
+  # High-end preset - For powerful systems (10GB+)
+  highend:
+    name: "High-End"
+    description: "Maximum performance for powerful systems (~10GB)"
+    conversationModel: "ollama:llama3.1:8b"
+    functionModel: "ollama:functiongemma:270m"
+    vram: "10GB"
+    disk: "5.0GB"
+    notes:
+      - "Highest conversation quality"
+      - "Best reasoning capabilities"
+      - "Requires powerful GPU"
+
+# Model Information
+models:
+  phi-3-mini:
+    size: "2.4GB"
+    contextLength: 4096
+    type: "conversation"
+    provider: "ollama"
+    description: "Microsoft's efficient small language model"
+
+  llama3.2:3b:
+    size: "1.9GB"
+    contextLength: 8192
+    type: "conversation"
+    provider: "ollama"
+    description: "Meta's instruction-tuned 3B parameter model"
+
+  llama3.1:8b:
+    size: "4.9GB"
+    contextLength: 32768
+    type: "conversation"
+    provider: "ollama"
+    description: "Meta's instruction-tuned 8B parameter model"
+
+  functiongemma:270m:
+    size: "301MB"
+    contextLength: 4096
+    type: "function"
+    provider: "ollama"
+    description: "Gemma variant optimized for function calling"
+    notes:
+      - "Only 270M parameters but effective for tool selection"
+      - "Much smaller than conversation models"
+      - "Requires Ollama 0.13.5+"
+
+# Notes
+warnings:
+  - "Always pull models with: ollama pull <model-name>"
+  - "functiongemma is NOT a conversation model - use it only for function calling"
+  - "VRAM requirements are approximate and may vary by system"
+  - "Disk size includes model weights only"
