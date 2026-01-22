@@ -2,3 +2,5 @@ export type { MessageRole, ChatMessage, ChatCompletionOptions, ChatCompletion, C
 export type { IModelProvider } from './types/provider.js';
 export { OllamaAdapter } from './OllamaAdapter.js';
 export type { OllamaAdapterOptions } from './OllamaAdapter.js';
+export { FunctionGemmaAdapter } from './FunctionGemmaAdapter.js';
+export type { FunctionGemmaAdapterOptions } from './FunctionGemmaAdapter.js';
