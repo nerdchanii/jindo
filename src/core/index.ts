@@ -4,3 +4,5 @@ export { Memory } from './Memory.js';
 export type { MemoryOptions, MemoryEntry, MemoryType, MemorySearchOptions } from './Memory.js';
 export { ToolExecutor } from './ToolExecutor.js';
 export type { ToolExecutorOptions, ToolFunction, ToolExecutionResult } from './ToolExecutor.js';
+export { FunctionRouter } from './FunctionRouter.js';
+export type { FunctionRouterOptions, RouteResult } from './FunctionRouter.js';
