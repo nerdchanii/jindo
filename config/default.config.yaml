@@ -1,0 +1,54 @@
+# Default Jindo Configuration
+# Copy this file to ~/.config/jindo/config.yaml after running 'jindo init'
+
+agent:
+  # Conversation model for natural language responses
+  # Available models: ollama:phi-3-mini, ollama:llama3.2:3b, ollama:llama3.1:8b
+  conversationModel: ollama:llama3.2:3b
+
+  # Function model for tool calling (functiongemma:270m works for all presets)
+  functionModel: ollama:functiongemma:270m
+
+  # Output format: 'text' | 'markdown'
+  outputFormat: text
+
+  # Maximum conversation history messages to keep
+  maxHistoryMessages: 50
+
+mcp:
+  servers:
+    # Built-in MCP servers can be added here
+    # Example:
+    # filesystem:
+    #   enabled: true
+    #   command: npx
+    #   args:
+    #     - -y
+    #     - @modelcontextprotocol/server-filesystem
+    #     - /path/to/allowed/directory
+    #   type: builtin
+
+    # GitHub MCP Server (requires GITHUB_TOKEN)
+    # github:
+    #   enabled: false
+    #   command: uvx
+    #   args:
+    #     - -y
+    #     - @modelcontextprotocol/server-github
+    #   type: builtin
+    #   env:
+    #     GITHUB_TOKEN: ${GITHUB_TOKEN}
+
+    # Brave Search MCP Server (requires BRAVE_API_KEY)
+    # brave-search:
+    #   enabled: false
+    #   command: npx
+    #   args:
+    #     - -y
+    #     - @modelcontextprotocol/server-brave-search
+    #   type: builtin
+    #   env:
+    #     BRAVE_API_KEY: ${BRAVE_API_KEY}
+
+# Environment variables can be used in config values using ${VAR_NAME} syntax
+# Example: ${OPENAI_API_KEY} will be replaced with the OPENAI_API_KEY environment variable
