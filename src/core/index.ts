@@ -6,3 +6,5 @@ export { ToolExecutor } from './ToolExecutor.js';
 export type { ToolExecutorOptions, ToolFunction, ToolExecutionResult } from './ToolExecutor.js';
 export { FunctionRouter } from './FunctionRouter.js';
 export type { FunctionRouterOptions, RouteResult } from './FunctionRouter.js';
+export { AgentController } from './AgentController.js';
+export type { AgentConfig, AgentResponse, AgentControllerOptions } from './AgentController.js';
