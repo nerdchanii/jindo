@@ -1,56 +1,15 @@
 /**
  * Agent Controller
- * Main orchestrator for the Jindo agent
+ * Main orchestrator for Jindo agent
  */
 
 import { ModelSelector } from '../models/ModelSelector.js';
 import { Conversation } from './Conversation.js';
-import { Memory } from './Memory.js';
+import { Memory, type MemoryEntry } from './Memory.js';
 import { ToolExecutor } from './ToolExecutor.js';
 import { FunctionRouter } from './FunctionRouter.js';
-import type { ChatCompletion, ChatCompletionOptions, ChatMessage, ToolDefinition, ToolCallRequest } from '../models/types/provider.js';
-
-/**
- * Agent configuration
- */
-export interface AgentConfig {
-  /** Model selector */
-  modelSelector: ModelSelector;
-  /** System prompt for agent */
-  systemPrompt?: string;
-  /** Maximum history messages */
-  maxHistoryMessages?: number;
-  /** Maximum memory entries */
-  maxMemoryEntries?: number;
-}
-
-/**
- * Agent response
- */
-export interface AgentResponse {
-  /** Generated text */
-  text: string;
-  /** Tool calls made */
-  toolCalls?: Array<{ name: string; args: Record<string, unknown> }>;
-  /** Tokens used */
-  tokens: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
-  /** Execution time in milliseconds */
-  executionTime: number;
-}
-
-/**
- * Agent controller options
- */
-export interface AgentControllerOptions {
-  /** Agent configuration */
-  config: AgentConfig;
-  /** Enable streaming */
-  streaming?: boolean;
-}
+import type { ChatCompletion, ChatCompletionOptions, ChatMessage, ToolDefinition, ToolExecutionResult, ToolCallRequest } from '../models/types/provider.js';
+import type { AgentConfig, AgentResponse } from './AgentController.js';
 
 /**
  * Main agent controller
@@ -83,7 +42,7 @@ export class AgentController {
   }
 
   /**
-   * Initialize the agent
+   * Initialize agent
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
@@ -226,7 +185,7 @@ export class AgentController {
   }
 
   /**
-   * Reset the agent (clear everything)
+   * Reset agent (clear everything)
    */
   reset(): void {
     this.conversation.reset();
@@ -245,7 +204,7 @@ export class AgentController {
   /**
    * Search memory
    */
-  searchMemory(query: string, limit?: number): typeof Memory.prototype.search {
+  searchMemory(query: string, limit?: number): MemoryEntry[] {
     return this.memory.search({ query, limit });
   }
 

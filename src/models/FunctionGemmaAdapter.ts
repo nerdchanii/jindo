@@ -3,7 +3,7 @@
  * Implements IModelProvider for function calling with Ollama's functiongemma model
  */
 
-import { IModelProvider, type ChatCompletion, type ChatCompletionOptions, type ChatMessage, type ModelInfo, type ToolCallRequest, type ToolCallResponse } from './types/provider.js';
+import { IModelProvider, type ChatCompletion, type ChatCompletionOptions, type ChatMessage, type ModelInfo, type ToolCallRequest, type ToolCallResponse, ChatMessage } from './types/provider.js';
 
 /**
  * Ollama function calling response types
@@ -246,7 +246,6 @@ export class FunctionGemmaAdapter implements IModelProvider {
           content: msg.content,
         })),
         tools: this.convertTools(tools),
-        // Force tool use if requested (for analysis)
         options: {
           temperature: forceTool ? 0.0 : 0.7,
         },

@@ -33,11 +33,9 @@ export interface RouteResult {
  */
 export class FunctionRouter {
   private toolDefinitions: Map<string, ToolDefinition> = new Map();
-  private enableFallback: boolean;
   private maxCallsPerTurn: number;
 
   constructor(options: FunctionRouterOptions = {}) {
-    this.enableFallback = options.enableFallback ?? true;
     this.maxCallsPerTurn = options.maxCallsPerTurn ?? 5;
   }
 

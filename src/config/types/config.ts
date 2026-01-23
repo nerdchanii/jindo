@@ -2,6 +2,9 @@
  * Jindo Configuration Types
  */
 
+/**
+ * Agent configuration
+ */
 export interface AgentConfig {
   /** Conversation model for natural language responses */
   conversationModel: string;
@@ -13,8 +16,11 @@ export interface AgentConfig {
   maxHistoryMessages: number;
 }
 
+/**
+ * MCP server configuration
+ */
 export interface MCPServerConfig {
-  /** Whether the server is enabled */
+  /** Whether to enable server */
   enabled: boolean;
   /** Command to run the server */
   command: string;
@@ -28,19 +34,10 @@ export interface MCPServerConfig {
   env?: Record<string, string>;
 }
 
+/**
+ * MCP settings
+ */
 export interface MCPSettings {
   /** MCP server configurations */
   servers: Record<string, MCPServerConfig>;
-}
-
-export interface JindoConfig {
-  /** Agent configuration */
-  agent: AgentConfig;
-  /** MCP server settings */
-  mcp: MCPSettings;
-}
-
-export interface ConfigManagerOptions {
-  /** Custom config path (default: ~/.config/jindo) */
-  configPath?: string;
 }
