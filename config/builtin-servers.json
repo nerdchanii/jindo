@@ -1,0 +1,124 @@
+{
+  "servers": {
+    "brave-search": {
+      "name": "Brave Search",
+      "description": "Search the web using Brave Search API",
+      "package": "@modelcontextprotocol/server-brave-search",
+      "version": "latest",
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      },
+      "category": "search",
+      "tags": ["web", "search", "api"],
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search",
+      "repository": "https://github.com/modelcontextprotocol/servers"
+    },
+    "filesystem": {
+      "name": "File System",
+      "description": "Access and manipulate local files and directories",
+      "package": "@modelcontextprotocol/server-filesystem",
+      "version": "latest", 
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem"],
+      "env": {
+        "FILESYSTEM_ROOT": "${FILESYSTEM_ROOT:-.}"
+      },
+      "category": "filesystem",
+      "tags": ["files", "local", "system"],
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+      "repository": "https://github.com/modelcontextprotocol/servers"
+    },
+    "git": {
+      "name": "Git",
+      "description": "Git version control operations",
+      "package": "@modelcontextprotocol/server-git",
+      "version": "latest",
+      "command": "npx", 
+      "args": ["@modelcontextprotocol/server-git"],
+      "env": {
+        "GIT_REPOSITORY": "${GIT_REPOSITORY:-.}"
+      },
+      "category": "development",
+      "tags": ["git", "version-control", "development"],
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
+      "repository": "https://github.com/modelcontextprotocol/servers"
+    },
+    "postgres": {
+      "name": "PostgreSQL",
+      "description": "PostgreSQL database operations and queries",
+      "package": "@modelcontextprotocol/server-postgres",
+      "version": "latest",
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-postgres"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "${POSTGRES_CONNECTION_STRING}"
+      },
+      "category": "database",
+      "tags": ["database", "sql", "postgresql"],
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres",
+      "repository": "https://github.com/modelcontextprotocol/servers"
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Send messages and interact with Slack workspaces",
+      "package": "@modelcontextprotocol/server-slack",
+      "version": "latest",
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_APP_TOKEN": "${SLACK_APP_TOKEN}"
+      },
+      "category": "communication",
+      "tags": ["slack", "messaging", "communication"],
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/slack",
+      "repository": "https://github.com/modelcontextprotocol/servers"
+    },
+    "puppeteer": {
+      "name": "Puppeteer",
+      "description": "Web browser automation and scraping",
+      "package": "@modelcontextprotocol/server-puppeteer", 
+      "version": "latest",
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-puppeteer"],
+      "env": {},
+      "category": "automation",
+      "tags": ["browser", "automation", "scraping"],
+      "homepage": "https://github.com/modelcontextprotocol/servers/tree/main/src/puppeteer",
+      "repository": "https://github.com/modelcontextprotocol/servers"
+    }
+  },
+  "categories": {
+    "search": {
+      "name": "Search & Discovery",
+      "description": "Tools for finding information online"
+    },
+    "filesystem": {
+      "name": "File System",
+      "description": "Tools for file and directory operations"
+    },
+    "development": {
+      "name": "Development",
+      "description": "Development tools and version control"
+    },
+    "database": {
+      "name": "Database",
+      "description": "Database connectivity and operations"
+    },
+    "communication": {
+      "name": "Communication", 
+      "description": "Messaging and collaboration tools"
+    },
+    "automation": {
+      "name": "Automation",
+      "description": "Browser automation and scripting"
+    }
+  },
+  "registry": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-24T00:00:00Z",
+    "totalServers": 6
+  }
+}
