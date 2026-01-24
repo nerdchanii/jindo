@@ -18,9 +18,18 @@ interface CleanupResult {
   cleaned: string[];
 }
 
-export class MCPServerCleanup {
-  private static readonly PROCESSES_TO_CHECK = ['node', 'python', 'python3', 'deno', 'bun', 'npx'];
+/**
+ * Kill a process tree (process and all its children)
+ */
+async function treeKill(pid: number, signal: string): Promise<void> {
+  if (process.platform === 'win32') {
+    child_process.execSync(`taskkill /pid ${pid} /t /f`, { stdio: 'ignore' });
+  } else {
+    child_process.execSync(`kill -${signal} -${pid}`, { stdio: 'ignore' });
+  }
+}
 
+export class MCPServerCleanup {
   private static readonly TEMP_DIRS = ['/tmp', '/var/tmp', process.env.TMPDIR || '/tmp'];
 
   private static async findRelatedProcesses(serverName: string): Promise<number[]> {

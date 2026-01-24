@@ -1,23 +1,22 @@
+import eslint from '@eslint/js';
+
 export default [
   {
-    ignores: ['dist/', 'node_modules/', '.git-trees/'],
+    ignores: ['dist/', 'node_modules/', '.git-trees/', '**/*.test.ts'],
   },
+  eslint.configs.recommended,
   {
-    files: ['**/*.ts', '**/*.js'],
+    files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
-      parserOptions: {
-        project: './tsconfig.json',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
       },
     },
-    plugins: {
-      '@typescript-eslint': (await import('@typescript-eslint/eslint-plugin')).default,
-    },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': 'off',
       'prefer-const': 'error',
     },
