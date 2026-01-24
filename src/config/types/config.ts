@@ -20,6 +20,8 @@ export interface AgentConfig {
  * MCP server configuration
  */
 export interface MCPServerConfig {
+  /** Server name (key in servers object) */
+  name?: string;
   /** Whether to enable server */
   enabled: boolean;
   /** Command to run the server */
