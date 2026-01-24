@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { existsSync, rmSync } from 'node:fs';
 import { ConfigManager } from './ConfigManager.js';
 import type { JindoConfig, MCPSettings } from './types/config.js';
 
@@ -7,11 +8,17 @@ describe('ConfigManager', () => {
   let configManager: ConfigManager;
 
   beforeEach(() => {
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true, force: true });
+    }
     configManager = new ConfigManager({ configPath: testDir });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true, force: true });
+    }
   });
 
   describe('getConfigDir', () => {

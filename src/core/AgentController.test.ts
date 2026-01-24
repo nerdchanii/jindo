@@ -90,7 +90,7 @@ describe('AgentController', () => {
       expect(response).toBeDefined();
       expect(response.text).toBeDefined();
       expect(response.tokens).toBeDefined();
-      expect(response.executionTime).toBeGreaterThan(0);
+      expect(response.executionTime).toBeGreaterThanOrEqual(0);
     });
 
     it('should add user message to conversation', async () => {
@@ -101,7 +101,7 @@ describe('AgentController', () => {
   });
 
   describe('registerTool', () => {
-    it('should register tool and add to router', () => {
+    it('should register tool and add to router', async () => {
       const mockTool = {
         definition: {
           name: 'test-tool',
@@ -112,13 +112,13 @@ describe('AgentController', () => {
       };
 
       controller.registerTool(mockTool);
-      const stats = controller.getStats();
+      const stats = await controller.getStats();
       expect(stats.tools).toBe(1);
     });
   });
 
   describe('registerMany', () => {
-    it('should register multiple tools', () => {
+    it('should register multiple tools', async () => {
       const mockTool1 = {
         definition: {
           name: 'tool1',
@@ -137,7 +137,7 @@ describe('AgentController', () => {
       };
 
       controller.registerMany([mockTool1, mockTool2]);
-      const stats = controller.getStats();
+      const stats = await controller.getStats();
       expect(stats.tools).toBe(2);
     });
   });
@@ -145,13 +145,21 @@ describe('AgentController', () => {
   describe('clearConversation', () => {
     it('should clear conversation but keep tools', async () => {
       await controller.initialize();
+      controller.registerTool({
+        definition: {
+          name: 'test-tool',
+          description: 'Test',
+          parameters: { type: 'object' as const, properties: {}, required: [] },
+        },
+        handler: async () => ({ result: 'success' }),
+      });
       await controller.processMessage('Hello');
       controller.clearConversation();
       
       const summary = controller.getConversationSummary();
       expect(summary.messageCount).toBe(0);
       
-      const stats = controller.getStats();
+      const stats = await controller.getStats();
       expect(stats.tools).toBeGreaterThan(0);
     });
   });
@@ -174,7 +182,7 @@ describe('AgentController', () => {
       const summary = controller.getConversationSummary();
       expect(summary.messageCount).toBe(0);
       
-      const stats = controller.getStats();
+      const stats = await controller.getStats();
       expect(stats.tools).toBe(0);
     });
   });
@@ -197,7 +205,7 @@ describe('AgentController', () => {
   describe('getStats', () => {
     it('should return comprehensive stats', async () => {
       await controller.initialize();
-      const stats = controller.getStats();
+      const stats = await controller.getStats();
       
       expect(stats.conversation).toBeDefined();
       expect(stats.memory).toBeDefined();

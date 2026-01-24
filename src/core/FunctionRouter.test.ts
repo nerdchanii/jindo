@@ -107,10 +107,10 @@ describe('FunctionRouter', () => {
         ],
       };
 
-      const calls = router.processModelResponse(response);
-      expect(calls).toHaveLength(2);
-      expect(calls[0].name).toBe('search');
-      expect(calls[0].args).toEqual({ query: 'test' });
+      const result = router.processModelResponse(response);
+      expect(result.calls).toHaveLength(2);
+      expect(result.calls[0].name).toBe('search');
+      expect(result.calls[0].args).toEqual({ query: 'test' });
     });
 
     it('should handle invalid JSON', () => {
@@ -120,8 +120,8 @@ describe('FunctionRouter', () => {
         ],
       };
 
-      const calls = router.processModelResponse(response);
-      expect(calls).toHaveLength(0);
+      const result = router.processModelResponse(response);
+      expect(result.calls).toHaveLength(0);
     });
   });
 

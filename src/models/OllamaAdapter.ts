@@ -3,7 +3,14 @@
  * Implements IModelProvider for Ollama's REST API
  */
 
-import { IModelProvider, type ChatCompletion, type ChatCompletionChunk, type ChatCompletionOptions, type ChatMessage, type ModelInfo } from './types/provider.js';
+import {
+  IModelProvider,
+  type ChatCompletion,
+  type ChatCompletionChunk,
+  type ChatCompletionOptions,
+  type ChatMessage,
+  type ModelInfo,
+} from './types/provider.js';
 
 /**
  * Ollama API response types
@@ -29,7 +36,7 @@ interface OllamaResponse {
 interface OllamaStreamResponse {
   model: string;
   created_at: string;
-  response: string;
+  message?: OllamaMessage;
   done: boolean;
 }
 
@@ -61,9 +68,7 @@ export class OllamaAdapter implements IModelProvider {
     this.timeout = options.timeout || 300000; // 5 minutes default
 
     // Parse model name from Ollama format
-    const modelName = this.model.includes(':')
-      ? this.model.split(':')[0]
-      : this.model;
+    const modelName = this.model.includes(':') ? this.model.split(':')[0] : this.model;
 
     this.modelInfo = {
       id: `ollama:${this.model}`,
@@ -153,7 +158,7 @@ export class OllamaAdapter implements IModelProvider {
       throw new Error(`Ollama API error: ${response.status} - ${error}`);
     }
 
-    const data: OllamaResponse = await response.json();
+    const data = (await response.json()) as OllamaResponse;
 
     return {
       message: {
@@ -218,7 +223,7 @@ export class OllamaAdapter implements IModelProvider {
         try {
           const data: OllamaStreamResponse = JSON.parse(line);
           yield {
-            content: data.response,
+            content: data.message?.content || '',
             done: data.done,
           };
 

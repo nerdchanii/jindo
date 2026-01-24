@@ -252,20 +252,18 @@ describe('Memory', () => {
       const mem = new Memory({ enableExpiration: true, defaultTtl: -1000 });
       mem.add({
         type: 'fact',
-        content: 'Expired',
+        content: 'Expired 1',
         tags: [],
       });
       mem.add({
         type: 'fact',
-        content: 'Not expired',
+        content: 'Expired 2',
         tags: [],
       });
-      // Mock one as not expired
-      const all = mem.getAll();
-      (all[1] as any).expiresAt = new Date(Date.now() + 100000);
 
       const cleared = mem.clearExpired();
-      expect(cleared).toBeGreaterThan(0);
+      expect(cleared).toBe(2);
+      expect(mem.count()).toBe(0);
     });
   });
 

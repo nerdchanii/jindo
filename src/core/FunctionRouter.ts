@@ -33,10 +33,14 @@ export interface RouteResult {
  */
 export class FunctionRouter {
   private toolDefinitions: Map<string, ToolDefinition> = new Map();
-  private maxCallsPerTurn: number;
+  private _maxCallsPerTurn: number;
 
   constructor(options: FunctionRouterOptions = {}) {
-    this.maxCallsPerTurn = options.maxCallsPerTurn ?? 5;
+    this._maxCallsPerTurn = options.maxCallsPerTurn ?? 5;
+  }
+
+  get maxCallsPerTurn(): number {
+    return this._maxCallsPerTurn;
   }
 
   /**
@@ -77,8 +81,6 @@ export class FunctionRouter {
       };
     }
 
-    // Simple heuristic: check if user mentions any tool names
-    const toolNames = Array.from(this.toolDefinitions.keys()).join('|');
     const userContent = lastUserMessage.content.toLowerCase();
     const mentionsTool = tools.some((t) => userContent.includes(t.name.toLowerCase()));
 
@@ -110,9 +112,9 @@ export class FunctionRouter {
   /**
    * Process function model response and route to actual tools
    */
-  processModelResponse(
-    response: { toolCalls: Array<{ name: string; arguments: string }> }
-  ): { calls: Array<{ name: string; args: Record<string, unknown> }> } {
+  processModelResponse(response: { toolCalls: Array<{ name: string; arguments: string }> }): {
+    calls: Array<{ name: string; args: Record<string, unknown> }>;
+  } {
     const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
 
     for (const toolCall of response.toolCalls) {
@@ -128,7 +130,7 @@ export class FunctionRouter {
       }
     }
 
-    return calls;
+    return { calls };
   }
 
   /**

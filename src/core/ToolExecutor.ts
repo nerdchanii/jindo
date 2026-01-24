@@ -242,6 +242,11 @@ export class ToolExecutor {
     this.cache.clear();
   }
 
+  clearTools(): void {
+    this.tools.clear();
+    this.cache.clear();
+  }
+
   /**
    * Clear expired cache entries
    */

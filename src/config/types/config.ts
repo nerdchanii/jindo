@@ -34,10 +34,15 @@ export interface MCPServerConfig {
   env?: Record<string, string>;
 }
 
-/**
- * MCP settings
- */
 export interface MCPSettings {
-  /** MCP server configurations */
   servers: Record<string, MCPServerConfig>;
+}
+
+export interface JindoConfig {
+  agent: AgentConfig;
+  mcp: MCPSettings;
+}
+
+export interface ConfigManagerOptions {
+  configPath?: string;
 }

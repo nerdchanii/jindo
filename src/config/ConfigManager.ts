@@ -57,7 +57,7 @@ export class ConfigManager {
    * Format: ${VAR_NAME} or ${VAR_NAME:default}
    */
   private substituteEnvVars(value: string): string {
-    return value.replace(/\$\{([^}:]+)(?::([^}]*))?\}/g, (_, varName, defaultValue) => {
+    return value.replace(/\$\{([^}:]+)(?::-?([^}]*))?\}/g, (_, varName, defaultValue) => {
       return process.env[varName] ?? defaultValue ?? '';
     });
   }
@@ -106,7 +106,7 @@ export class ConfigManager {
       throw new Error(`Invalid config file format: ${configPath}`);
     }
 
-    this.config = this.substituteEnvVarsInObject(parsed) as JindoConfig;
+    this.config = this.substituteEnvVarsInObject(parsed) as unknown as JindoConfig;
     return this.config;
   }
 
@@ -131,7 +131,7 @@ export class ConfigManager {
       throw new Error(`Invalid MCP settings format: ${mcpPath}`);
     }
 
-    this.mcpSettings = this.substituteEnvVarsInObject(parsed) as MCPSettings;
+    this.mcpSettings = this.substituteEnvVarsInObject(parsed) as unknown as MCPSettings;
     return this.mcpSettings;
   }
 

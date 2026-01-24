@@ -5,7 +5,15 @@
 
 import { OllamaAdapter, type OllamaAdapterOptions } from './OllamaAdapter.js';
 import { FunctionGemmaAdapter, type FunctionGemmaAdapterOptions } from './FunctionGemmaAdapter.js';
-import type { IModelProvider, ChatCompletion, ChatCompletionOptions, ChatCompletionChunk, ToolCallRequest, ToolCallResponse, ModelInfo } from './types/provider.js';
+import type {
+  IModelProvider,
+  ChatCompletion,
+  ChatCompletionOptions,
+  ChatCompletionChunk,
+  ToolCallRequest,
+  ToolCallResponse,
+  ModelInfo,
+} from './types/provider.js';
 
 /**
  * Preset configurations for model selection
@@ -34,7 +42,10 @@ export interface ModelSelectorOptions {
 /**
  * Preset configurations
  */
-export const MODEL_PRESETS: Record<ModelPreset, { conversationModel: string; functionModel: string }> = {
+export const MODEL_PRESETS: Record<
+  ModelPreset,
+  { conversationModel: string; functionModel: string }
+> = {
   lightweight: {
     conversationModel: 'ollama:phi-3-mini',
     functionModel: 'ollama:functiongemma:270m',
@@ -67,7 +78,8 @@ export class ModelSelector {
 
   constructor(options: ModelSelectorOptions = {}) {
     const preset = MODEL_PRESETS.balanced;
-    this.conversationModelName = options.conversationModel || preset.conversationModel.replace('ollama:', '');
+    this.conversationModelName =
+      options.conversationModel || preset.conversationModel.replace('ollama:', '');
     this.functionModelName = options.functionModel || preset.functionModel.replace('ollama:', '');
     this.baseUrl = options.baseUrl || 'http://localhost:11434';
     this.timeout = options.timeout || 300000;
@@ -88,7 +100,9 @@ export class ModelSelector {
     const conversationAvailable = await this.conversationAdapter.isAvailable();
 
     if (!conversationAvailable && this.fallbackConversationModel) {
-      this.fallbackConversationAdapter = this.createConversationAdapter(this.fallbackConversationModel);
+      this.fallbackConversationAdapter = this.createConversationAdapter(
+        this.fallbackConversationModel
+      );
       const fallbackAvailable = await this.fallbackConversationAdapter.isAvailable();
       if (fallbackAvailable) {
         this.conversationAdapter = this.fallbackConversationAdapter;
@@ -221,8 +235,8 @@ export class ModelSelector {
         return [];
       }
 
-      const data = await response.json();
-      return (data.models || []).map((m: { name: string }) => m.name);
+      const data = (await response.json()) as { models?: Array<{ name: string }> };
+      return (data.models || []).map((m) => m.name);
     } catch {
       return [];
     }

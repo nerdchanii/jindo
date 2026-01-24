@@ -3,7 +3,14 @@
  * Implements IModelProvider for function calling with Ollama's functiongemma model
  */
 
-import { IModelProvider, type ChatCompletion, type ChatCompletionOptions, type ChatMessage, type ModelInfo, type ToolCallRequest, type ToolCallResponse, ChatMessage } from './types/provider.js';
+import type {
+  IModelProvider,
+  ChatCompletion,
+  ChatCompletionOptions,
+  ModelInfo,
+  ToolCallRequest,
+  ToolCallResponse,
+} from './types/provider.js';
 
 /**
  * Ollama function calling response types
@@ -151,7 +158,7 @@ export class FunctionGemmaAdapter implements IModelProvider {
       throw new Error(`Ollama API error: ${response.status} - ${error}`);
     }
 
-    const data: OllamaFunctionResponse = await response.json();
+    const data = (await response.json()) as OllamaFunctionResponse;
 
     return {
       message: {
@@ -259,7 +266,7 @@ export class FunctionGemmaAdapter implements IModelProvider {
       throw new Error(`Ollama API error: ${response.status} - ${error}`);
     }
 
-    const data: OllamaFunctionResponse = await response.json();
+    const data = (await response.json()) as OllamaFunctionResponse;
 
     // Extract tool calls from response
     const toolCalls = (data.message.tool_calls || []).map((call) => ({

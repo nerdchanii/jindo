@@ -8,8 +8,42 @@ import { Conversation } from './Conversation.js';
 import { Memory, type MemoryEntry } from './Memory.js';
 import { ToolExecutor } from './ToolExecutor.js';
 import { FunctionRouter } from './FunctionRouter.js';
-import type { ChatCompletion, ChatCompletionOptions, ChatMessage, ToolDefinition, ToolExecutionResult, ToolCallRequest } from '../models/types/provider.js';
-import type { AgentConfig, AgentResponse } from './AgentController.js';
+import type {
+  ChatCompletion,
+  ChatCompletionOptions,
+  ChatMessage,
+  ToolDefinition,
+  ToolCallRequest,
+} from '../models/types/provider.js';
+
+export interface AgentConfig {
+  modelSelector: ModelSelector;
+  maxHistoryMessages?: number;
+  maxMemoryEntries?: number;
+  systemPrompt?: string;
+}
+
+export interface AgentResponse {
+  text: string;
+  toolCalls?: Array<{ name: string; args: Record<string, unknown> }>;
+  tokens: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  executionTime: number;
+}
+
+export interface StreamCallbacks {
+  onChunk?: (chunk: string) => void;
+  onComplete?: (fullText: string) => void;
+  onError?: (error: Error) => void;
+}
+
+export interface AgentControllerOptions {
+  config: AgentConfig;
+  streaming?: boolean;
+}
 
 /**
  * Main agent controller
@@ -21,7 +55,7 @@ export class AgentController {
   private memory: Memory;
   private toolExecutor: ToolExecutor;
   private functionRouter: FunctionRouter;
-  private config: AgentConfig;
+  public readonly config: AgentConfig;
   private streaming: boolean;
   private isInitialized: boolean = false;
 
@@ -63,10 +97,10 @@ export class AgentController {
     return modelsReady;
   }
 
-  /**
-   * Process a user message
-   */
-  async processMessage(userMessage: string): Promise<AgentResponse> {
+  async processMessage(
+    userMessage: string,
+    callbacks?: StreamCallbacks
+  ): Promise<AgentResponse> {
     const startTime = Date.now();
 
     // Add user message to conversation
@@ -131,13 +165,21 @@ export class AgentController {
       };
 
       if (this.streaming) {
-        // Handle streaming
-        for await (const chunk of this.modelSelector.completeStream(completionOptions)) {
-          process.stdout.write(chunk.content);
-          process.stdout.write('');
+        let streamedText = '';
+        try {
+          for await (const chunk of this.modelSelector.completeStream(completionOptions)) {
+            if (chunk.content) {
+              callbacks?.onChunk?.(chunk.content);
+              streamedText += chunk.content;
+            }
+          }
+          responseText = streamedText || '[No response]';
+          callbacks?.onComplete?.(responseText);
+          this.conversation.addAssistantMessage(responseText);
+        } catch (error) {
+          callbacks?.onError?.(error instanceof Error ? error : new Error(String(error)));
+          throw error;
         }
-        process.stdout.write('\n');
-        responseText = '[Streaming output]';
       } else {
         const completion: ChatCompletion = await this.modelSelector.complete(completionOptions);
         responseText = completion.message.content;
@@ -162,7 +204,10 @@ export class AgentController {
   /**
    * Register a tool
    */
-  registerTool(tool: { definition: ToolDefinition; handler: (args: Record<string, unknown>) => Promise<unknown> }): void {
+  registerTool(tool: {
+    definition: ToolDefinition;
+    handler: (args: Record<string, unknown>) => Promise<unknown>;
+  }): void {
     this.toolExecutor.register(tool);
     this.functionRouter.registerTool(tool.definition);
   }
@@ -170,7 +215,12 @@ export class AgentController {
   /**
    * Register multiple tools
    */
-  registerMany(tools: Array<{ definition: ToolDefinition; handler: (args: Record<string, unknown>) => Promise<unknown> }>): void {
+  registerMany(
+    tools: Array<{
+      definition: ToolDefinition;
+      handler: (args: Record<string, unknown>) => Promise<unknown>;
+    }>
+  ): void {
     this.toolExecutor.registerMany(tools);
     for (const tool of tools) {
       this.functionRouter.registerTool(tool.definition);
@@ -190,7 +240,7 @@ export class AgentController {
   reset(): void {
     this.conversation.reset();
     this.memory.clear();
-    this.toolExecutor.clearCache();
+    this.toolExecutor.clearTools();
     this.functionRouter.clearTools();
   }
 
@@ -211,7 +261,7 @@ export class AgentController {
   /**
    * Get agent statistics
    */
-  getStats(): {
+  async getStats(): Promise<{
     conversation: ReturnType<Conversation['getSummary']>;
     memory: ReturnType<Memory['getStats']>;
     tools: ReturnType<ToolExecutor['getToolCount']>;
@@ -220,7 +270,7 @@ export class AgentController {
       functionModel: string | null;
       isReady: boolean;
     };
-  } {
+  }> {
     return {
       conversation: this.conversation.getSummary(),
       memory: this.memory.getStats(),
