@@ -15,7 +15,15 @@ export class FileSystemTool extends BaseTool {
     super('filesystem', 'File system operations for reading, writing, and listing files');
   }
 
-  getSchema() {
+  getSchema(): {
+    name: string;
+    description: string;
+    parameters: {
+      type: 'object';
+      properties: Record<string, unknown>;
+      required?: string[];
+    };
+  } {
     return {
       name: 'filesystem',
       description: 'Perform file system operations',
@@ -25,24 +33,24 @@ export class FileSystemTool extends BaseTool {
           operation: {
             type: 'string',
             enum: ['read', 'write', 'list', 'exists', 'mkdir'],
-            description: 'The operation to perform'
+            description: 'The operation to perform',
           },
           path: {
             type: 'string',
-            description: 'File or directory path'
+            description: 'File or directory path',
           },
           content: {
             type: 'string',
-            description: 'Content to write (for write operation)'
+            description: 'Content to write (for write operation)',
           },
           recursive: {
             type: 'boolean',
             description: 'Recursive listing (for list operation)',
-            default: false
-          }
+            default: false,
+          },
         },
-        required: ['operation', 'path']
-      }
+        required: ['operation', 'path'],
+      },
     };
   }
 
@@ -106,7 +114,7 @@ export class FileSystemTool extends BaseTool {
   private async listFiles(dirPath: string, recursive: boolean): Promise<ToolResult> {
     try {
       this.log(`Listing directory: ${dirPath} (recursive: ${recursive})`);
-      
+
       if (!recursive) {
         const files = await readdirAsync(dirPath);
         const fileStats = await Promise.all(
@@ -118,14 +126,14 @@ export class FileSystemTool extends BaseTool {
                 name: file,
                 path: fullPath,
                 type: stats.isDirectory() ? 'directory' : 'file',
-                size: stats.size
+                size: stats.size,
               };
             } catch {
               return {
                 name: file,
                 path: fullPath,
                 type: 'unknown',
-                size: 0
+                size: 0,
               };
             }
           })
@@ -162,7 +170,7 @@ export class FileSystemTool extends BaseTool {
             path: fullPath,
             type: stats.isDirectory() ? 'directory' : 'file',
             size: stats.size,
-            depth: currentDepth
+            depth: currentDepth,
           };
 
           items.push(item);

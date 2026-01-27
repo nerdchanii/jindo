@@ -78,6 +78,12 @@ export interface ToolCallRequest {
   messages: ChatMessage[];
   /** Whether to force tool use */
   forceTool?: boolean;
+  /** Maximum tokens to generate */
+  maxTokens?: number;
+  /** Sampling temperature */
+  temperature?: number;
+  /** Stop sequences */
+  stop?: string[];
 }
 
 /**

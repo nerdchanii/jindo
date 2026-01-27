@@ -14,6 +14,27 @@ export interface AgentConfig {
   outputFormat: 'text' | 'markdown';
   /** Maximum conversation history messages */
   maxHistoryMessages: number;
+  /** Provider configurations */
+  providers?: Record<string, ProviderConfig>;
+  /** Prompt configuration */
+  prompts?: {
+    /** Use custom prompts instead of builtin */
+    customEnabled?: boolean;
+    /** Prompt template variables */
+    variables?: Record<string, string>;
+  };
+}
+
+/**
+ * Provider configuration for different model providers
+ */
+export interface ProviderConfig {
+  /** API key for the provider */
+  apiKey?: string;
+  /** Base URL for the provider (if different from default) */
+  baseUrl?: string;
+  /** Additional provider-specific options */
+  options?: Record<string, unknown>;
 }
 
 /**

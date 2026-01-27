@@ -3,8 +3,11 @@
  * Manages conversation and function models with automatic selection and fallback
  */
 
-import { OllamaAdapter, type OllamaAdapterOptions } from './OllamaAdapter.js';
-import { FunctionGemmaAdapter, type FunctionGemmaAdapterOptions } from './FunctionGemmaAdapter.js';
+import { OllamaAdapter } from './OllamaAdapter.js';
+import { FunctionGemmaAdapter } from './FunctionGemmaAdapter.js';
+import { AnthropicAdapter } from './AnthropicAdapter.js';
+import { OpenAIAdapter } from './OpenAIAdapter.js';
+import { GroqAdapter } from './GroqAdapter.js';
 import type {
   IModelProvider,
   ChatCompletion,
@@ -37,6 +40,8 @@ export interface ModelSelectorOptions {
     conversationModel?: string;
     functionModel?: string;
   };
+  /** Provider configurations */
+  providers?: Record<string, any>;
 }
 
 /**
@@ -75,6 +80,7 @@ export class ModelSelector {
   private timeout: number;
   private fallbackConversationModel?: string;
   private fallbackFunctionModel?: string;
+  private providers: Record<string, { apiKey?: string; baseUrl?: string }>;
 
   constructor(options: ModelSelectorOptions = {}) {
     const preset = MODEL_PRESETS.balanced;
@@ -85,6 +91,7 @@ export class ModelSelector {
     this.timeout = options.timeout || 300000;
     this.fallbackConversationModel = options.fallback?.conversationModel;
     this.fallbackFunctionModel = options.fallback?.functionModel;
+    this.providers = options.providers || {};
   }
 
   /**
@@ -129,27 +136,78 @@ export class ModelSelector {
   }
 
   /**
-   * Create a conversation model adapter
+   * Parse provider and model from model string
+   * Format: "provider:model" (e.g., "anthropic:claude-3-sonnet-20240229")
+   * If no provider prefix, defaults to 'ollama'
    */
-  private createConversationAdapter(modelName: string): OllamaAdapter {
-    const options: OllamaAdapterOptions = {
-      baseUrl: this.baseUrl,
-      model: modelName,
-      timeout: this.timeout,
-    };
-    return new OllamaAdapter(options);
+  private parseProviderAndModel(modelString: string): { provider: string; model: string } {
+    const parts = modelString.split(':');
+    const knownProviders = ['anthropic', 'openai', 'groq', 'ollama'];
+
+    if (parts.length >= 2 && knownProviders.includes(parts[0])) {
+      return { provider: parts[0], model: parts.slice(1).join(':') };
+    }
+    return { provider: 'ollama', model: modelString };
   }
 
   /**
-   * Create a function model adapter
+   * Create a conversation model adapter based on provider
    */
-  private createFunctionAdapter(modelName: string): FunctionGemmaAdapter {
-    const options: FunctionGemmaAdapterOptions = {
-      baseUrl: this.baseUrl,
-      model: modelName,
-      timeout: this.timeout,
-    };
-    return new FunctionGemmaAdapter(options);
+  private createConversationAdapter(modelName: string): IModelProvider {
+    const { provider, model } = this.parseProviderAndModel(modelName);
+    const providerConfig = this.providers[provider] || {};
+
+    switch (provider) {
+      case 'anthropic':
+        if (!providerConfig.apiKey) {
+          throw new Error('Anthropic API key not configured. Use: jindo provider --set anthropic:apiKey=YOUR_KEY');
+        }
+        return new AnthropicAdapter({ apiKey: providerConfig.apiKey, model });
+      case 'openai':
+        if (!providerConfig.apiKey) {
+          throw new Error('OpenAI API key not configured. Use: jindo provider --set openai:apiKey=YOUR_KEY');
+        }
+        return new OpenAIAdapter({ apiKey: providerConfig.apiKey, baseURL: providerConfig.baseUrl, model });
+      case 'groq':
+        if (!providerConfig.apiKey) {
+          throw new Error('Groq API key not configured. Use: jindo provider --set groq:apiKey=YOUR_KEY');
+        }
+        return new GroqAdapter({ apiKey: providerConfig.apiKey, model });
+      case 'ollama':
+      default:
+        return new OllamaAdapter({ baseUrl: this.baseUrl, model, timeout: this.timeout });
+    }
+  }
+
+  /**
+   * Create a function model adapter based on provider
+   * For cloud providers (anthropic, openai, groq), use the same adapter as conversation
+   * since they support native function calling
+   */
+  private createFunctionAdapter(modelName: string): IModelProvider {
+    const { provider, model } = this.parseProviderAndModel(modelName);
+    const providerConfig = this.providers[provider] || {};
+
+    switch (provider) {
+      case 'anthropic':
+        if (!providerConfig.apiKey) {
+          throw new Error('Anthropic API key not configured. Use: jindo provider --set anthropic:apiKey=YOUR_KEY');
+        }
+        return new AnthropicAdapter({ apiKey: providerConfig.apiKey, model });
+      case 'openai':
+        if (!providerConfig.apiKey) {
+          throw new Error('OpenAI API key not configured. Use: jindo provider --set openai:apiKey=YOUR_KEY');
+        }
+        return new OpenAIAdapter({ apiKey: providerConfig.apiKey, baseURL: providerConfig.baseUrl, model });
+      case 'groq':
+        if (!providerConfig.apiKey) {
+          throw new Error('Groq API key not configured. Use: jindo provider --set groq:apiKey=YOUR_KEY');
+        }
+        return new GroqAdapter({ apiKey: providerConfig.apiKey, model });
+      case 'ollama':
+      default:
+        return new FunctionGemmaAdapter({ baseUrl: this.baseUrl, model, timeout: this.timeout });
+    }
   }
 
   /**
@@ -261,7 +319,12 @@ export class ModelSelector {
   /**
    * Get current configuration
    */
-  getConfig(): { preset: ModelPreset; conversationModel: string; functionModel: string } {
+  getConfig(): {
+    preset: ModelPreset;
+    conversationModel: string;
+    functionModel: string;
+    providers: Record<string, { apiKey?: string; baseUrl?: string }>;
+  } {
     // Determine current preset
     let preset: ModelPreset = 'balanced';
     const currentConv = `ollama:${this.conversationModelName}`;
@@ -278,6 +341,7 @@ export class ModelSelector {
       preset,
       conversationModel: `ollama:${this.conversationModelName}`,
       functionModel: `ollama:${this.functionModelName}`,
+      providers: this.providers,
     };
   }
 }

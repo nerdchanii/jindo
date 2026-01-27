@@ -38,7 +38,7 @@ export class RegistryClient {
   private lastCacheTime = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  constructor(configPath?: string) {
+  constructor() {
     const projectRoot = path.resolve(__dirname, '../../config');
     this.builtinServersPath = path.join(projectRoot, 'builtin-servers.json');
   }
@@ -48,18 +48,18 @@ export class RegistryClient {
    */
   async loadBuiltinServers(): Promise<RegistryData> {
     const now = Date.now();
-    
-    if (this.cache && (now - this.lastCacheTime) < this.CACHE_DURATION) {
+
+    if (this.cache && now - this.lastCacheTime < this.CACHE_DURATION) {
       return this.cache;
     }
 
     try {
       const data = await readFileAsync(this.builtinServersPath, 'utf8');
       const registryData: RegistryData = JSON.parse(data);
-      
+
       this.cache = registryData;
       this.lastCacheTime = now;
-      
+
       return registryData;
     } catch (error) {
       console.error('Failed to load builtin servers:', error);
@@ -89,12 +89,13 @@ export class RegistryClient {
   async searchServers(query: string): Promise<BuiltinServer[]> {
     const data = await this.loadBuiltinServers();
     const lowerQuery = query.toLowerCase();
-    
-    return Object.values(data.servers).filter(server => 
-      server.name.toLowerCase().includes(lowerQuery) ||
-      server.description.toLowerCase().includes(lowerQuery) ||
-      server.tags.some(tag => tag.toLowerCase().includes(lowerQuery)) ||
-      server.id.toLowerCase().includes(lowerQuery)
+
+    return Object.values(data.servers).filter(
+      (server) =>
+        server.name.toLowerCase().includes(lowerQuery) ||
+        server.description.toLowerCase().includes(lowerQuery) ||
+        server.tags.some((tag) => tag.toLowerCase().includes(lowerQuery)) ||
+        server.id.toLowerCase().includes(lowerQuery)
     );
   }
 
@@ -103,10 +104,8 @@ export class RegistryClient {
    */
   async getServersByCategory(category: string): Promise<BuiltinServer[]> {
     const data = await this.loadBuiltinServers();
-    
-    return Object.values(data.servers).filter(server => 
-      server.category === category
-    );
+
+    return Object.values(data.servers).filter((server) => server.category === category);
   }
 
   /**
@@ -120,7 +119,10 @@ export class RegistryClient {
   /**
    * Convert builtin server to MCP config
    */
-  async serverToMcpConfig(serverId: string, customEnv?: Record<string, string>): Promise<MCPServerConfig | null> {
+  async serverToMcpConfig(
+    serverId: string,
+    customEnv?: Record<string, string>
+  ): Promise<MCPServerConfig | null> {
     const server = await this.getServer(serverId);
     if (!server) {
       return null;
@@ -135,8 +137,8 @@ export class RegistryClient {
       type: 'builtin',
       env: {
         ...server.env,
-        ...customEnv
-      }
+        ...customEnv,
+      },
     };
 
     return config;
@@ -180,9 +182,9 @@ export class RegistryClient {
   async getServersByTag(tag: string): Promise<BuiltinServer[]> {
     const data = await this.loadBuiltinServers();
     const lowerTag = tag.toLowerCase();
-    
-    return Object.values(data.servers).filter(server => 
-      server.tags.some(serverTag => serverTag.toLowerCase() === lowerTag)
+
+    return Object.values(data.servers).filter((server) =>
+      server.tags.some((serverTag) => serverTag.toLowerCase() === lowerTag)
     );
   }
 }

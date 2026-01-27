@@ -4,6 +4,9 @@
  */
 
 import type { ToolDefinition } from '../models/types/provider.js';
+import { BaseTool } from '../tools/BaseTool.js';
+import { FileSystemTool } from '../tools/FileSystemTool.js';
+import { ShellTool } from '../tools/ShellTool.js';
 
 /**
  * Tool execution result
@@ -63,14 +66,44 @@ export class ToolExecutor {
     this.enableTimeout = options.enableTimeout ?? true;
     this.defaultTimeout = options.defaultTimeout || 30000; // 30 seconds
     this.enableCache = options.enableCache ?? true;
+    this.cacheTtl = 5 * 60 * 1000; // 5 minutes
+
+    // Register built-in tools
+    this.register(new FileSystemTool());
+    this.register(new ShellTool());
   }
 
   /**
    * Register a tool
    */
-  register(tool: ToolFunction): void {
-    const { definition } = tool;
-    this.tools.set(definition.name, tool);
+  register(tool: ToolFunction | BaseTool): void {
+    if (tool instanceof BaseTool) {
+      // Handle BaseTool instances
+      const schema = tool.getSchema();
+      const toolFunction: ToolFunction = {
+        definition: {
+          name: schema.name,
+          description: schema.description,
+          parameters: {
+            type: 'object',
+            properties: schema.parameters.properties,
+            required: schema.parameters.required || [],
+          },
+        },
+        handler: async (args: Record<string, unknown>) => {
+          const result = await tool.execute(args);
+          if (!result.success) {
+            throw new Error(result.error || 'Tool execution failed');
+          }
+          return result.data;
+        },
+      };
+      this.tools.set(schema.name, toolFunction);
+    } else {
+      // Handle ToolFunction instances
+      const { definition } = tool;
+      this.tools.set(definition.name, tool);
+    }
   }
 
   /**
@@ -110,10 +143,7 @@ export class ToolExecutor {
   /**
    * Execute a tool by name
    */
-  async execute(
-    name: string,
-    args: Record<string, unknown>
-  ): Promise<ToolExecutionResult> {
+  async execute(name: string, args: Record<string, unknown>): Promise<ToolExecutionResult> {
     const tool = this.tools.get(name);
     if (!tool) {
       return {
@@ -152,11 +182,7 @@ export class ToolExecutor {
       // Execute tool with timeout
       let result: unknown;
       if (this.enableTimeout) {
-        result = await this.executeWithTimeout(
-          tool.handler,
-          args,
-          this.defaultTimeout
-        );
+        result = await this.executeWithTimeout(tool.handler, args, this.defaultTimeout);
       } else {
         result = await tool.handler(args);
       }
@@ -215,9 +241,7 @@ export class ToolExecutor {
   async executeMany(
     executions: Array<{ name: string; args: Record<string, unknown> }>
   ): Promise<ToolExecutionResult[]> {
-    const promises = executions.map(({ name, args }) =>
-      this.execute(name, args)
-    );
+    const promises = executions.map(({ name, args }) => this.execute(name, args));
     return Promise.all(promises);
   }
 

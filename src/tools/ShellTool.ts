@@ -1,5 +1,4 @@
 import { spawn, ChildProcess } from 'node:child_process';
-import { promisify } from 'node:util';
 import { BaseTool, ToolParameters, ToolResult } from './BaseTool.js';
 
 interface CommandResult {
@@ -17,7 +16,15 @@ export class ShellTool extends BaseTool {
     super('shell', 'Execute shell commands and manage processes');
   }
 
-  getSchema() {
+  getSchema(): {
+    name: string;
+    description: string;
+    parameters: {
+      type: 'object';
+      properties: Record<string, unknown>;
+      required?: string[];
+    };
+  } {
     return {
       name: 'shell',
       description: 'Execute shell commands and manage processes',
@@ -26,48 +33,48 @@ export class ShellTool extends BaseTool {
         properties: {
           command: {
             type: 'string',
-            description: 'Command to execute'
+            description: 'Command to execute',
           },
           args: {
             type: 'array',
             items: { type: 'string' },
             description: 'Command arguments',
-            default: []
+            default: [],
           },
           cwd: {
             type: 'string',
             description: 'Working directory',
-            default: null
+            default: null,
           },
           timeout: {
             type: 'number',
             description: 'Timeout in milliseconds',
-            default: 30000
+            default: 30000,
           },
           shell: {
             type: 'boolean',
             description: 'Use shell (true) or direct exec (false)',
-            default: true
+            default: true,
           },
           background: {
             type: 'boolean',
             description: 'Run command in background',
-            default: false
+            default: false,
           },
           pid: {
             type: 'number',
             description: 'Process ID for background process management',
-            default: null
+            default: null,
           },
           action: {
             type: 'string',
             enum: ['execute', 'kill', 'list', 'status'],
             description: 'Action to perform',
-            default: 'execute'
-          }
+            default: 'execute',
+          },
         },
-        required: ['command', 'action']
-      }
+        required: ['command', 'action'],
+      },
     };
   }
 
@@ -99,14 +106,16 @@ export class ShellTool extends BaseTool {
       return { success: false, error: 'Command must be a string' };
     }
 
+    const argsArray = Array.isArray(args) ? (args as string[]) : [];
+
     try {
-      this.log(`Executing: ${command} ${args.join(' ')}`);
-      
-      const child = spawn(command, args as string[], {
-        cwd: cwd as string || process.cwd(),
-        shell,
+      this.log(`Executing: ${command} ${argsArray.join(' ')}`);
+
+      const child: ChildProcess = spawn(command, argsArray, {
+        cwd: (cwd as string) || process.cwd(),
+        shell: shell as boolean,
         stdio: background ? ['ignore', 'pipe', 'pipe'] : 'pipe',
-        detached: background
+        detached: background as boolean,
       });
 
       const processId = ++this.processCounter;
@@ -115,18 +124,18 @@ export class ShellTool extends BaseTool {
       if (background) {
         child.unref();
         this.logSuccess(`Background process started: PID ${child.pid}, ID ${processId}`);
-        return { 
-          success: true, 
-          data: { 
-            processId, 
-            pid: child.pid, 
+        return {
+          success: true,
+          data: {
+            processId,
+            pid: child.pid || 0,
             background: true,
-            command: `${command} ${args.join(' ')}`
-          } 
+            command: `${command} ${argsArray.join(' ')}`,
+          },
         };
       }
 
-      const result = await this.waitForCommand(child, timeout);
+      const result = await this.waitForCommand(child, timeout as number);
       this.runningProcesses.delete(processId);
 
       if (result.exitCode === 0) {
@@ -134,13 +143,12 @@ export class ShellTool extends BaseTool {
         return { success: true, data: result };
       } else {
         this.logError(`Command failed with exit code: ${result.exitCode}`);
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: `Command failed with exit code ${result.exitCode}`,
-          data: result 
+          data: result,
         };
       }
-
     } catch (error) {
       this.logError(`Failed to execute command: ${error}`);
       return { success: false, error: `Failed to execute command: ${error}` };
@@ -155,15 +163,20 @@ export class ShellTool extends BaseTool {
     }
 
     try {
-      this.log(`Killing process: ${pid}`);
-      process.kill(pid, 'SIGTERM');
-      
+      const pidNumber = typeof pid === 'number' ? pid : parseInt(pid as string, 10);
+      if (isNaN(pidNumber)) {
+        return { success: false, error: 'Invalid PID parameter' };
+      }
+
+      this.log(`Killing process: ${pidNumber}`);
+      process.kill(pidNumber, 'SIGTERM');
+
       // Wait a bit and force kill if still running
       setTimeout(() => {
         try {
-          process.kill(pid, 0); // Check if still running
-          process.kill(pid, 'SIGKILL');
-          this.logSuccess(`Force killed process: ${pid}`);
+          process.kill(pidNumber, 0); // Check if still running
+          process.kill(pidNumber, 'SIGKILL');
+          this.logSuccess(`Force killed process: ${pidNumber}`);
         } catch {
           // Process already dead
         }
@@ -171,7 +184,6 @@ export class ShellTool extends BaseTool {
 
       this.logSuccess(`Kill signal sent to process: ${pid}`);
       return { success: true, data: `Kill signal sent to process ${pid}` };
-
     } catch (error) {
       this.logError(`Failed to kill process: ${error}`);
       return { success: false, error: `Failed to kill process: ${error}` };
@@ -185,12 +197,11 @@ export class ShellTool extends BaseTool {
         pid: child.pid,
         command: child.spawnfile,
         args: child.spawnargs,
-        status: child.killed ? 'killed' : 'running'
+        status: child.killed ? 'killed' : 'running',
       }));
 
       this.logSuccess(`Listed ${processes.length} running processes`);
       return { success: true, data: processes };
-
     } catch (error) {
       this.logError(`Failed to list processes: ${error}`);
       return { success: false, error: `Failed to list processes: ${error}` };
@@ -216,12 +227,11 @@ export class ShellTool extends BaseTool {
         command: child.spawnfile,
         args: child.spawnargs,
         status: child.killed ? 'killed' : 'running',
-        connected: child.connected
+        connected: child.connected,
       };
 
       this.logSuccess(`Status retrieved for process: ${processId}`);
       return { success: true, data: status };
-
     } catch (error) {
       this.logError(`Failed to get process status: ${error}`);
       return { success: false, error: `Failed to get process status: ${error}` };
@@ -242,7 +252,7 @@ export class ShellTool extends BaseTool {
             stdout,
             stderr,
             exitCode: null,
-            signal: 'SIGTERM'
+            signal: 'SIGTERM',
           });
         }
       }, timeout);
@@ -263,7 +273,7 @@ export class ShellTool extends BaseTool {
             stdout,
             stderr,
             exitCode: code,
-            signal
+            signal,
           });
         }
       });
@@ -276,7 +286,7 @@ export class ShellTool extends BaseTool {
             stdout,
             stderr: stderr + error.message,
             exitCode: 1,
-            signal: null
+            signal: null,
           });
         }
       });

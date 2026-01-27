@@ -77,7 +77,7 @@ mcpCommand
           }
         }
 
-        let serverConfig;
+        let serverConfig: MCPServerConfig;
 
         if (options.registry) {
           const registry = new RegistryClient();
@@ -93,12 +93,14 @@ mcpCommand
             process.exit(1);
           }
 
-          const serverConfig = await registry.serverToMcpConfig(name);
+          const serverConfigResult = await registry.serverToMcpConfig(name);
 
-          if (!serverConfig) {
+          if (!serverConfigResult) {
             cli.writeError(`Failed to create server configuration for "${name}".`);
             process.exit(1);
           }
+
+          serverConfig = serverConfigResult;
 
           cli.writeLine(chalk.green(`✓ Found server: ${server.name}`));
           cli.writeLine(chalk.gray(`Package: ${server.package}@${server.version}`));
@@ -117,11 +119,12 @@ mcpCommand
               }
             }
 
-            if (Object.keys(customEnv).length > 0) {
-              const serverConfigWithEnv = await registry.serverToMcpConfig(name, customEnv);
-              if (serverConfigWithEnv) {
-                serverConfig = serverConfigWithEnv;
-              }
+            const serverConfigFromRegistry = await registry.serverToMcpConfig(name, customEnv);
+            if (serverConfigFromRegistry) {
+              serverConfig = serverConfigFromRegistry;
+            } else {
+              cli.writeError(`Failed to create server configuration for "${name}".`);
+              process.exit(1);
             }
           }
         } else {
@@ -144,8 +147,8 @@ mcpCommand
           serverConfig = {
             name,
             enabled: false,
-            command: '',
-            args: [],
+            command: command || '',
+            args: args || [],
           };
         }
 
