@@ -43,3 +43,8 @@ coverage/
 
 # Misc
 .opencode/
+
+# Other agent artifacts (do not commit)
+.git-trees/
+.omc/
+.sisyphus/
