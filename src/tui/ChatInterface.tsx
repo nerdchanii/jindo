@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, memo, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
-import TextInput from 'ink-text-input';
+import { EnhancedInput } from './EnhancedInput.js';
 import { filterSuggestions, moveSuggestionSelection, selectSuggestion } from './chatSuggestions.js';
 
 export interface ChatMessage {
@@ -124,11 +124,12 @@ export function ChatInterface({
 
       {/* Input area */}
       <Box flexDirection="column" borderStyle="single" paddingX={1}>
-        <TextInput
+        <EnhancedInput
           value={input}
           onChange={setInput}
           onSubmit={handleSubmit}
-          placeholder="Type your message... (Tab for autocomplete, Esc to cancel, Ctrl+C to exit)"
+          placeholder="Type your message... (Tab: autocomplete, Esc: cancel, Ctrl+L: clear)"
+          showCharCount
         />
 
         {/* Suggestions dropdown */}
