@@ -34,8 +34,10 @@ export class PromptManager {
 
   constructor(configManager: ConfigManager) {
     this.userPromptsPath = path.join(configManager.getConfigDir(), 'prompts');
-    // In development, use src/prompts; in production (built), use dist/prompts
-    const currentDir = path.dirname(fileURLToPath(import.meta.url));
+    // Find prompts directory relative to this file location
+    // Since this file is in src/prompts/, the prompts are in the same directory
+    const currentFile = fileURLToPath(import.meta.url);
+    const currentDir = path.dirname(currentFile);
     this.builtinPromptsPath = currentDir;
   }
 

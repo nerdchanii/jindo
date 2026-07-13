@@ -27,7 +27,15 @@ export const chatCommand = new Command('chat')
       // Check if TUI mode is requested
       if (options.tui) {
         console.log(chalk.blue('🐕 Starting Jindo TUI Mode...'));
-        startTUI(configManager);
+
+        // Ensure stdin is properly configured for TUI
+        if (process.stdin.isTTY) {
+          startTUI(configManager);
+        } else {
+          console.error(chalk.red('✗ TUI mode requires a TTY (terminal) environment.'));
+          console.log(chalk.gray('Please run in a regular terminal, not piped input.'));
+          process.exit(1);
+        }
         return;
       }
 

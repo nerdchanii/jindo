@@ -1,6 +1,7 @@
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, useMemo, memo, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
+import { filterSuggestions, moveSuggestionSelection, selectSuggestion } from './chatSuggestions.js';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -80,15 +81,22 @@ export function ChatInterface({
       setShowSuggestions(!showSuggestions);
     } else if (showSuggestions && (key.upArrow || key.downArrow)) {
       // Navigate suggestions
-      if (key.upArrow && selectedSuggestion > 0) {
-        setSelectedSuggestion(selectedSuggestion - 1);
-      } else if (key.downArrow && selectedSuggestion < (suggestions?.length || 0) - 1) {
-        setSelectedSuggestion(selectedSuggestion + 1);
+      const filteredSuggestions = filterSuggestions(suggestions, input, true);
+      if (key.upArrow) {
+        setSelectedSuggestion(
+          moveSuggestionSelection(selectedSuggestion, 'up', filteredSuggestions.length)
+        );
+      } else if (key.downArrow) {
+        setSelectedSuggestion(
+          moveSuggestionSelection(selectedSuggestion, 'down', filteredSuggestions.length)
+        );
       }
     } else if (showSuggestions && key.return) {
       // Select suggestion
-      if (suggestions && suggestions[selectedSuggestion]) {
-        setInput(suggestions[selectedSuggestion]);
+      const filteredSuggestions = filterSuggestions(suggestions, input, true);
+      const selectedValue = selectSuggestion(filteredSuggestions, selectedSuggestion);
+      if (selectedValue) {
+        setInput(selectedValue);
         setShowSuggestions(false);
         setSelectedSuggestion(0);
       }
@@ -96,9 +104,18 @@ export function ChatInterface({
   });
 
   const currentSuggestions = useMemo(() => {
-    if (!showSuggestions || !suggestions) return [];
-    return suggestions.filter((s) => s.toLowerCase().includes(input.toLowerCase()));
+    return filterSuggestions(suggestions, input, showSuggestions);
   }, [showSuggestions, suggestions, input]);
+
+  useEffect(() => {
+    setSelectedSuggestion((prev) => {
+      if (currentSuggestions.length === 0) {
+        return 0;
+      }
+
+      return Math.min(prev, currentSuggestions.length - 1);
+    });
+  }, [currentSuggestions.length]);
 
   return (
     <Box flexDirection="column" height="100%">
