@@ -8,6 +8,8 @@ import { Conversation } from './Conversation.js';
 import { Memory, type MemoryEntry } from './Memory.js';
 import { ToolExecutor } from './ToolExecutor.js';
 import { FunctionRouter } from './FunctionRouter.js';
+import { PromptManager } from '../prompts/PromptManager.js';
+import { ConfigManager } from '../config/ConfigManager.js';
 import type {
   ChatCompletion,
   ChatCompletionOptions,
@@ -40,8 +42,38 @@ export interface StreamCallbacks {
   onError?: (error: Error) => void;
 }
 
+/**
+ * Remove non-Korean characters from text
+ * Filters out English letters and common foreign words while preserving Korean
+ */
+function filterToKoreanOnly(text: string): string {
+  // Allow ONLY Korean characters, numbers, and basic punctuation
+  let filtered = text;
+
+  // Remove ALL non-Korean characters except basic punctuation and numbers
+  filtered = filtered.replace(/[^가-힣\s\d\.\,\!\?\-\~]/g, '');
+
+  // Remove any remaining single non-Korean characters
+  filtered = filtered.replace(/[^가-힣\d\s\.\,\!\?\-\~]+/g, '');
+
+  // Clean up multiple spaces and ensure proper spacing
+  filtered = filtered
+    .replace(/\s+/g, ' ') // Multiple spaces to single
+    .replace(/^\s+/, '') // Leading spaces
+    .replace(/\s+$/, '') // Trailing spaces
+    .trim();
+
+  // If result is empty or too short after filtering, provide fallback
+  if (filtered.length < 2) {
+    filtered = '안녕하세요! 무엇을 도와드릴까요?';
+  }
+
+  return filtered;
+}
+
 export interface AgentControllerOptions {
   config: AgentConfig;
+  configManager: ConfigManager;
   streaming?: boolean;
 }
 
@@ -55,6 +87,7 @@ export class AgentController {
   private memory: Memory;
   private toolExecutor: ToolExecutor;
   private functionRouter: FunctionRouter;
+  private promptManager: PromptManager;
   public readonly config: AgentConfig;
   private streaming: boolean;
   private isInitialized: boolean = false;
@@ -63,9 +96,9 @@ export class AgentController {
     this.config = options.config;
     this.streaming = options.streaming ?? false;
     this.modelSelector = options.config.modelSelector;
+    this.promptManager = new PromptManager(options.configManager);
     this.conversation = new Conversation({
       maxMessages: options.config.maxHistoryMessages || 50,
-      systemPrompt: options.config.systemPrompt,
     });
     this.memory = new Memory({
       maxEntries: options.config.maxMemoryEntries || 1000,
@@ -84,6 +117,10 @@ export class AgentController {
     // Initialize model selector
     await this.modelSelector.initialize();
 
+    // Set system prompt from PromptManager
+    const systemPrompt = await this.promptManager.getSystemPrompt();
+    this.conversation.setSystemPrompt(systemPrompt);
+
     this.isInitialized = true;
   }
 
@@ -97,10 +134,7 @@ export class AgentController {
     return modelsReady;
   }
 
-  async processMessage(
-    userMessage: string,
-    callbacks?: StreamCallbacks
-  ): Promise<AgentResponse> {
+  async processMessage(userMessage: string, callbacks?: StreamCallbacks): Promise<AgentResponse> {
     const startTime = Date.now();
 
     // Add user message to conversation
@@ -174,6 +208,7 @@ export class AgentController {
             }
           }
           responseText = streamedText || '[No response]';
+          responseText = filterToKoreanOnly(responseText);
           callbacks?.onComplete?.(responseText);
           this.conversation.addAssistantMessage(responseText);
         } catch (error) {
@@ -183,6 +218,7 @@ export class AgentController {
       } else {
         const completion: ChatCompletion = await this.modelSelector.complete(completionOptions);
         responseText = completion.message.content;
+        responseText = filterToKoreanOnly(responseText);
         this.conversation.addAssistantMessage(responseText);
 
         totalTokens.completionTokens = completion.usage.completionTokens;

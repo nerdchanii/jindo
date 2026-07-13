@@ -4,5 +4,8 @@ export { OllamaAdapter } from './OllamaAdapter.js';
 export type { OllamaAdapterOptions } from './OllamaAdapter.js';
 export { FunctionGemmaAdapter } from './FunctionGemmaAdapter.js';
 export type { FunctionGemmaAdapterOptions } from './FunctionGemmaAdapter.js';
+export { AnthropicAdapter } from './AnthropicAdapter.js';
+export { OpenAIAdapter } from './OpenAIAdapter.js';
+export { GroqAdapter } from './GroqAdapter.js';
 export { ModelSelector, MODEL_PRESETS } from './ModelSelector.js';
 export type { ModelSelectorOptions, ModelPreset } from './ModelSelector.js';

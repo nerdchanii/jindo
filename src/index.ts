@@ -7,6 +7,7 @@ import {
   mcpCommand,
   modelCommand,
   configCommand,
+  providerCommand,
 } from './cli/commands/index.js';
 
 const program = new Command();
@@ -21,6 +22,7 @@ program.addCommand(chatCommand);
 program.addCommand(mcpCommand);
 program.addCommand(modelCommand);
 program.addCommand(configCommand);
+program.addCommand(providerCommand);
 
 program
   .command('doctor')

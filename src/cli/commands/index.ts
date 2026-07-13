@@ -3,3 +3,4 @@ export { chatCommand } from './chat.js';
 export { mcpCommand } from './mcp.js';
 export { modelCommand } from './model.js';
 export { configCommand } from './config.js';
+export { providerCommand } from './provider.js';
